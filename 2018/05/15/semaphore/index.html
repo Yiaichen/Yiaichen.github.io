@@ -116,7 +116,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/img/thread/permits.png">
 <meta property="og:image" content="http://yoursite.com/img/thread/out.png">
-<meta property="og:updated_time" content="2018-05-16T14:44:20.051Z">
+<meta property="og:updated_time" content="2018-08-03T07:34:26.816Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Semaphore深入浅出">
 <meta name="twitter:description" content="1. Semaphore定义个人理解：同一时间内，限制指定数量线程通过 2. Semaphore的同步性12345678910111213141516171819202122232425262728package com.hc.thread.chapterOne.SemaPhore;import java.util.concurrent.Semaphore;/** * 同一时间内  限制多个线程通">
@@ -416,6 +416,7 @@
 <p><strong>ReentrantLock</strong>跟<strong>Condition</strong>大家不明白的先自行度娘，后面我抽空再补上，emmmm…<br>ReentrantLock在这里再做一重锁的判断，确保生产者跟消费者都是平衡的<br>如果不加ReentrantLock会怎么样，因为我们是用的Condition进行一个相互唤醒的操作，不用ReentrantLock的话可能会报<strong>IllegalMonitorStateException</strong>的异常</p>
 <p>输出的话就给大家截个图：<br><img src="/img/thread/out.png"></p>
 <h3 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h3><p>Semaphore semaphore = new Semaphore(1)其实只是初始化多少个许可<br>acquire()相当于动态的减少许可，相应的release()可以动态的增加许可<br>Semaphore提供的限制并发线程的功能，此功能在默认的synchronized种是不提供的</p>
+<p><a href="https://github.com/Yiaichen/javaDemo/tree/master/javaDemo" target="_blank" rel="external">源码地址</a><br>源码在thread目录下,还有一些其他demo,大家可自行学习</p>
 
       
     </div>
@@ -486,6 +487,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/02/restructure/" rel="prev" title="重构 (附源码)">
+                重构 (附源码) <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -588,7 +593,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -610,7 +615,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Java,重构," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="定义个人理解：计算机理解代码很简单,因为不管你怎么写终究会编译成字节码,所以重构的定义简单点来说就是让你写的代码能让其他人看懂。 定义（《重构》作者）：对软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本。 案例代码大家都知道怎么写,多余的也不多说了,直接上干(dao)货(ban)实例非常简单,这是一个影片出租店用的程序,计算每一位顾客的消费金额并打印详单">
+<meta name="keywords" content="Java,重构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="重构 (附源码)">
+<meta property="og:url" content="http://yoursite.com/2018/08/02/restructure/index.html">
+<meta property="og:site_name" content="Vayi">
+<meta property="og:description" content="定义个人理解：计算机理解代码很简单,因为不管你怎么写终究会编译成字节码,所以重构的定义简单点来说就是让你写的代码能让其他人看懂。 定义（《重构》作者）：对软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本。 案例代码大家都知道怎么写,多余的也不多说了,直接上干(dao)货(ban)实例非常简单,这是一个影片出租店用的程序,计算每一位顾客的消费金额并打印详单">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/img/restructure/restruct.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/amountFor.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/changeName.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/getCharge.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/removeAmount.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/getFre.png">
+<meta property="og:image" content="http://yoursite.com/img/restructure/getFrequentRenterPoints.png">
+<meta property="og:updated_time" content="2018-08-03T10:09:01.625Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="重构 (附源码)">
+<meta name="twitter:description" content="定义个人理解：计算机理解代码很简单,因为不管你怎么写终究会编译成字节码,所以重构的定义简单点来说就是让你写的代码能让其他人看懂。 定义（《重构》作者）：对软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本。 案例代码大家都知道怎么写,多余的也不多说了,直接上干(dao)货(ban)实例非常简单,这是一个影片出租店用的程序,计算每一位顾客的消费金额并打印详单">
+<meta name="twitter:image" content="http://yoursite.com/img/restructure/restruct.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/08/02/restructure/"/>
+
+
+
+
+
+  <title>重构 (附源码) | Vayi</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+<a href="https://github.com/Yiaichen"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Vayi</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            文章
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-comment">
+          <a href="/comment/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-comment"></i> <br />
+            
+            留言
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/02/restructure/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Vayi">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">重构 (附源码)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-02T16:46:00+08:00">
+                2018-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p><strong>个人理解</strong>：<em>计算机理解代码很简单,因为不管你怎么写终究会编译成字节码,所以重构的定义简单点来说就是让你写的代码能让其他人看懂。</em></p>
+<p><strong>定义（《重构》作者）</strong>：<em>对软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本。</em></p>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p>代码大家都知道怎么写,多余的也不多说了,直接上干(dao)货(ban)实例非常简单,这是一个影片出租店用的程序,计算每一位顾客的消费金额并打印详单。<br>操作者告诉程序：租客租了那些影片、租期多长,程序便根据租赁时间和影片类型来算出费用。</p>
+<p>影片（Movie）分三类：常规片、儿童片、新片,出了计算费用还需要为常客计算积分,积分会根据租的影片种类是否为新片会有所不同。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 影片</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Movie</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> regular = <span class="number">0</span>; <span class="comment">//常规片</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> new_release = <span class="number">1</span>; <span class="comment">//新片</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> childrens = <span class="number">2</span>; <span class="comment">//儿童片</span></div><div class="line"></div><div class="line">    <span class="keyword">private</span> String title;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> priceCode;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Movie</span><span class="params">(String title, <span class="keyword">int</span> priceCode)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.title = title;</div><div class="line">        <span class="keyword">this</span>.priceCode = priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getTitle</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> title;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setTitle</span><span class="params">(String title)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.title = title;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPriceCode</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPriceCode</span><span class="params">(<span class="keyword">int</span> priceCode)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.priceCode = priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 租赁</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Rental</span> </span>&#123;</div><div class="line">    </div><div class="line">    <span class="keyword">private</span> Movie movie; <span class="comment">// 租的电影</span></div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> dayRented; <span class="comment">// 租的时间</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Rental</span><span class="params">(Movie movie, <span class="keyword">int</span> dayRented)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.movie = movie;</div><div class="line">        <span class="keyword">this</span>.dayRented = dayRented;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> Movie <span class="title">getMovie</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> movie;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getDayRented</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> dayRented;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 消费者</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Customer</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> Vector rentals = <span class="keyword">new</span> Vector(); <span class="comment">// 存租的影片</span></div><div class="line">    <span class="keyword">private</span> String name;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Customer</span><span class="params">(String name)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.name = name;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addRental</span><span class="params">(Rental arg)</span> </span>&#123;</div><div class="line">        rentals.addElement(arg);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> name;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">statement</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">double</span> totalAmount = <span class="number">0</span>;</div><div class="line">        <span class="keyword">int</span> frequentRenterPoints = <span class="number">0</span>;</div><div class="line">        Enumeration rentalss = rentals.elements();</div><div class="line">        String result = <span class="string">"RentalNew Record for"</span> + <span class="string">" "</span> + getName() + <span class="string">"\n"</span>;</div><div class="line">        <span class="keyword">while</span> (rentalss.hasMoreElements()) &#123;</div><div class="line">            <span class="keyword">double</span> thisAmount = <span class="number">0</span>;</div><div class="line">            Rental each = (Rental) rentalss.nextElement();</div><div class="line"></div><div class="line">            <span class="keyword">switch</span> (each.getMovie().getPriceCode()) &#123;</div><div class="line">                <span class="keyword">case</span> Movie.regular:</div><div class="line">                    thisAmount += <span class="number">2</span>;</div><div class="line">                    <span class="keyword">if</span> (each.getDayRented() &gt; <span class="number">2</span>)</div><div class="line">                        thisAmount += (each.getDayRented() - <span class="number">2</span>) * <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Movie.new_release:</div><div class="line">                    thisAmount += each.getDayRented() * <span class="number">3</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Movie.childrens:</div><div class="line">                    thisAmount += <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">if</span> (each.getDayRented() &gt; <span class="number">3</span>)</div><div class="line">                        thisAmount += (each.getDayRented() - <span class="number">3</span>) * <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">//积分  每借一张加1个积分</span></div><div class="line">            frequentRenterPoints++;</div><div class="line">            <span class="comment">//积分累加条件  新版本的片子,借的时间大于1天</span></div><div class="line">            <span class="keyword">if</span> ((each.getMovie().getPriceCode() == Movie.new_release) &amp;&amp; each.getDayRented() &gt; <span class="number">1</span>) &#123;</div><div class="line">                frequentRenterPoints++;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            result += <span class="string">"\t"</span> + each.getMovie().getTitle() + <span class="string">"\t"</span></div><div class="line">                    + String.valueOf(thisAmount) + <span class="string">"\n"</span>;</div><div class="line"></div><div class="line">            totalAmount += thisAmount;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        result += <span class="string">"Amount owed is "</span> + String.valueOf(totalAmount) + <span class="string">"\n"</span>;</div><div class="line">        result += <span class="string">"You earned "</span> + String.valueOf(frequentRenterPoints) + <span class="string">" "</span></div><div class="line">                + <span class="string">"frequent renter points"</span>;</div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Customer里的statement()方法就是生成详单的函数,也是我们本次重构的入口。那重构之前我们先思考几个问题,你第一眼看到这个statement()方法的时候是怎么想的？<br>首先肯定会说它设计不好,因为没有面向对象实思想,并且后期维护起来也很费人力。<br><strong>假如我们的用户需求有修改,不是打印txt这种格式的文本,而是输出Json或者Html格式的内容的话</strong>,你会发现很难修改,然后往往就是复制一份,接着改改改,编译通过,能跑就ok了<br>这样确实可以,<strong>但如果计费的标准也发生变化了呢?</strong>,那这个时候你得同时修改两个方法,<br>并且还要保证两处修改的一致性,如果后续还需要修改的话就会越积累越多,CV大法的问题就浮现出来了,所以这个时候就需要重构来拯救了。（越早重构越好,没事的时候就看看代码还能不能重构）</p>
+<p>注：如果你发现自己需要为程序添加一个特性,而代码结构让你没法很方便的添加的时候,那么就先<br>    重构这个程序,使特性可以很方便的添加了再添加特性</p>
+<h4 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h4><p>首先开始之前给大家看看同一段代码重构前后的对比<br><img src="/img/restructure/restruct.png"></p>
+<p>代码量少了80%左右,并且结构更清晰了,可扩展性更好,耦合性更低了</p>
+<h4 id="重构第一步"><a href="#重构第一步" class="headerlink" title="重构第一步"></a>重构第一步</h4><p>建立测试类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 测试类</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">test01</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"=========================重构前结果========================="</span>);</div><div class="line">        Movie mov = <span class="keyword">new</span> Movie(<span class="string">"xxx"</span>, <span class="number">2</span>);</div><div class="line">        Rental ren = <span class="keyword">new</span> Rental(mov, <span class="number">8</span>);</div><div class="line">        Customer cus = <span class="keyword">new</span> Customer(<span class="string">"Cheng"</span>);</div><div class="line">        cus.addRental(ren);</div><div class="line"></div><div class="line">        System.out.println(cus.statement());</div><div class="line">        System.out.println(<span class="string">"=========================重构前结果========================="</span>);</div><div class="line"></div><div class="line">        System.out.println(<span class="string">"=========================重构后结果========================="</span>);</div><div class="line">        MovieNew newMov = <span class="keyword">new</span> MovieNew(<span class="string">"xxx"</span>, <span class="number">2</span>);</div><div class="line">        RentalNew newRen = <span class="keyword">new</span> RentalNew(newMov, <span class="number">8</span>);</div><div class="line">        CustomerNew cusNew = <span class="keyword">new</span> CustomerNew(<span class="string">"Cheng"</span>);</div><div class="line">        cusNew.addRentalNew(newRen);</div><div class="line"></div><div class="line">        System.out.println(cusNew.statement());</div><div class="line">        System.out.println(<span class="string">"=========================重构后结果========================="</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>切记：重构第一步先建立相应部分的测试类,一定不能影响原来结果的运行,并且重构一块的时候<br>     就需要测试一次,看结果是否一致。</p>
+<h4 id="分解并重组statement"><a href="#分解并重组statement" class="headerlink" title="分解并重组statement()"></a>分解并重组statement()</h4><p>首先我们需要找到重构部分的逻辑泥团,很明显statement()里面的逻辑泥团就是这个switch语句,那我们就把这个地方单独提出一个函数来进行计算,<br>首先找出这个函数内部的局部变量跟参数,我们可以找到一个是each一个是thisAmount,前者并没有被修改,后者会被修改,所以这里我们尽量把不用修改的当参数传递进去,<br>如果是会被修改的当参数就要认真考虑是否可行了,如果只有一个变量会被修改,那我们可以把它当作返回值</p>
+<p><img src="/img/restructure/amountFor.png"></p>
+<p>直接用IDEA的话可以用 <strong>CTRL+ALT+M</strong> 组合键来提取选中的内容为方法<br>然后我们也把函数内的变量名修改下,增加可阅读性,同样是可以用快捷键来修改变量名 <strong>SHIFT+F6</strong></p>
+<p><img src="/img/restructure/changeName.png"></p>
+<p>每次重构完一部分,哪怕很小的一部分也要先测试一遍,只有编译测试通过了才可以进行下一步的重构<br>我们继续看这个提取出来的amountFor()函数,发现里面只用到了Rental类相关的操作,但是却并没有Customer类的操作,<br>所以我们怀疑这里是不是放错了位置,我们把amountFor移动到Rental里面,顺便方法名也改为getCharge(),同样的移动方法也有快捷键: <strong>F6</strong></p>
+<p><img src="/img/restructure/getCharge.png"></p>
+<p>这里就先对getCharge的操作到此为止了,我们再回到statement()函数来<br>这个时候我们已经把switch提取出来了,我们可以看到thisAmount这个变量接收一次getCharge的结果之后就没有改变了<br>那么我们完全可以直接用getCharge来替代它</p>
+<p><img src="/img/restructure/removeAmount.png"></p>
+<p>同样的,重构完之后编译测试一次,保证自己没有破坏任何东西<br>然后回到我们的statement()函数,发现我们的积分计算也跟Rental有关,所以我们可以直接放到Rental类里面去<br>由于这里的积分变量frequentRenterPoints有了初始值，并且是用来统计的，所以我们不用当参数传递进去直接接收返回值进行累加就可以了</p>
+<p><img src="/img/restructure/getFre.png"><br><img src="/img/restructure/getFrequentRenterPoints.png"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><a href="https://github.com/Yiaichen/javaDemo/tree/master/javaDemo" target="_blank" rel="external">源码地址</a><br>重构部分的源码在restructure目录下,还有一些其他demo,大家可自行学习</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>感觉不错的话请点击下方按钮打赏我吧！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.jpg" alt="chen WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="chen Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"><i class="fa fa-tag"></i> Java</a>
+          
+            <a href="/tags/重构/" rel="tag"><i class="fa fa-tag"></i> 重构</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/15/semaphore/" rel="next" title="Semaphore深入浅出">
+                <i class="fa fa-chevron-left"></i> Semaphore深入浅出
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/23/MYSQL_LOCK/" rel="prev" title="MYSQL锁及死锁的产生、解决">
+                MYSQL锁及死锁的产生、解决 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+  <a class="jiathis_button_tsina"></a>
+  <a class="jiathis_button_tqq"></a>
+  <a class="jiathis_button_weixin"></a>
+  <a class="jiathis_button_cqq"></a>
+  <a class="jiathis_button_douban"></a>
+  <a class="jiathis_button_renren"></a>
+  <a class="jiathis_button_qzone"></a>
+  <a class="jiathis_button_kaixin001"></a>
+  <a class="jiathis_button_copy"></a>
+  <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+  <a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+  var jiathis_config={
+    hideMore:false
+  }
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="chen" />
+          <p class="site-author-name" itemprop="name">chen</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#定义"><span class="nav-number">1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#案例"><span class="nav-number">2.</span> <span class="nav-text">案例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开始"><span class="nav-number">2.1.</span> <span class="nav-text">开始</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#重构第一步"><span class="nav-number">2.2.</span> <span class="nav-text">重构第一步</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分解并重组statement"><span class="nav-number">2.3.</span> <span class="nav-text">分解并重组statement()</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+	  <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=536622304&auto=1&height=66"></iframe>
+
+    </div>
+  </aside>
+
+
+        
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">chen</span>
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-eye"></i><span id="busuanzi_container_site_pv">
+    本站总访问量<span id="busuanzi_value_site_pv"></span>次
+</span>
+</div>
+
+<div class="theme-info">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+    本站访问人数<span id="busuanzi_value_site_uv"></span>人
+</span>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="true"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  undefined
+<script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/assets/shizuku.model.json"},"display":{"position":"left","width":90,"height":150,"bottom":-30},"mobile":{"show":true},"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/"});</script></body>
+</html>

@@ -306,6 +306,650 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/23/MYSQL_LOCK/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Vayi">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/23/MYSQL_LOCK/" itemprop="url">MYSQL锁及死锁的产生、解决</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-23T21:02:41+08:00">
+                2018-08-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Mysql/" itemprop="url" rel="index">
+                    <span itemprop="name">Mysql</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="InnoDB"><a href="#InnoDB" class="headerlink" title="InnoDB"></a>InnoDB</h3><blockquote>
+<p>MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——<a href="https://en.wikipedia.org/wiki/Multiversion_concurrency_control" target="_blank" rel="external">MVCC</a> (Multi-Version Concurrency Control) </p>
+<p>在MVCC并发控制中，读操作可以分成两类：<br>快照读 (snapshot read)与当前读 (current read)。<br>快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。<br>当前读，读取的是记录的最新版本，并且，当前读返回的记录，都会加上锁，保证其他事务不会再并发修改这条记录。</p>
+<p>快照读<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</div></pre></td></tr></table></figure></p>
+<p>当前读<br><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">lock</span> <span class="keyword">in</span> <span class="keyword">share</span> <span class="keyword">mode</span>;</div><div class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ? <span class="keyword">for</span> <span class="keyword">update</span>;</div><div class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">table</span> <span class="keyword">values</span> (…);</div><div class="line"><span class="keyword">update</span> <span class="keyword">table</span> <span class="keyword">set</span> ? <span class="keyword">where</span> ?;</div><div class="line"><span class="keyword">delete</span> <span class="keyword">from</span> <span class="keyword">table</span> <span class="keyword">where</span> ?;</div></pre></td></tr></table></figure></p>
+<p>所有以上的语句，都属于当前读，读取记录的最新版本。并且，读取之后，还需要保证其他并发事务不能修改当前记录，对读取记录加锁。<br>其中，除了第一条语句，对读取记录加S锁 (共享锁)外，其他的操作，都加的是X锁 (排它锁)。</p>
+</blockquote>
+<h4 id="InnoDB锁类型"><a href="#InnoDB锁类型" class="headerlink" title="InnoDB锁类型"></a>InnoDB锁类型</h4><h5 id="X锁-or-S锁"><a href="#X锁-or-S锁" class="headerlink" title="X锁 or S锁"></a>X锁 or S锁</h5><p>在InnoDb中实现了两个标准的行级锁，可以简单的看为两个读写锁:</p>
+<blockquote>
+<ul>
+<li>S-共享锁：又叫读锁，其他事务可以继续加共享锁，但是不能继续加排他锁。</li>
+<li>X-排他锁: 又叫写锁，一旦加了写锁之后，其他事务就不能加锁了。</li>
+</ul>
+</blockquote>
+<p>兼容性：是指事务A获得一个某行某种锁之后，事务B同样的在这个行上尝试获取某种锁，如果能立即获取，则称锁兼容，反之叫冲突。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">.</th>
+<th style="text-align:center">X</th>
+<th style="text-align:center">S</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">X</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">冲突</td>
+</tr>
+<tr>
+<td style="text-align:center">S</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">兼容</td>
+</tr>
+</tbody>
+</table>
+<h5 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h5><p>意向锁在InnoDB中是表级锁,和他的名字一样他是用来表达一个事务想要获取什么。意向锁分为:</p>
+<blockquote>
+<ul>
+<li>IS-意向共享锁:表达一个事务想要获取一张表中某几行的共享锁。</li>
+<li>IX-意向排他锁:表达一个事务想要获取一张表中某几行的排他锁。</li>
+</ul>
+<p>这个锁有什么用呢？为什么需要这个锁呢？<br>首先说一下如果没有这个锁，如果要给这个表加上表锁，一般的做法是去遍历每一行看看他是否有行锁，这样的话效率太低。<br>而我们有意向锁，只需要判断是否有意向锁即可，不需要再去一行行的去扫描。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">.</th>
+<th style="text-align:center">IX</th>
+<th style="text-align:center">IS</th>
+<th style="text-align:center">X</th>
+<th style="text-align:center">S</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">IX</td>
+<td style="text-align:center">兼容</td>
+<td style="text-align:center">兼容</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">冲突</td>
+</tr>
+<tr>
+<td style="text-align:center">IS</td>
+<td style="text-align:center">兼容</td>
+<td style="text-align:center">兼容</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">兼容</td>
+</tr>
+<tr>
+<td style="text-align:center">X</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">冲突</td>
+</tr>
+<tr>
+<td style="text-align:center">S</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">兼容</td>
+<td style="text-align:center">冲突</td>
+<td style="text-align:center">兼容</td>
+</tr>
+</tbody>
+</table>
+<p><strong>注：意向锁之间兼容，排它锁（包含意向）跟共享锁冲突，共享锁（包含意向）之间是兼容的</strong></p>
+<h5 id="间隙锁-gap锁"><a href="#间隙锁-gap锁" class="headerlink" title="间隙锁(gap锁)"></a>间隙锁(gap锁)</h5><p><img src="https://user-gold-cdn.xitu.io/2018/8/8/1651714afdc0f320?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="gap"></p>
+<blockquote>
+<p>间隙锁顾名思义锁间隙，不锁记录。锁间隙的意思就是锁定某一个范围，间隙锁又叫gap锁，其不会阻塞其他的gap锁，但是会阻塞插入间隙锁，这也是用来防止幻读的关键。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">where条件</th>
+<th style="text-align:center">定位条件</th>
+<th style="text-align:center">终止条件</th>
+<th style="text-align:center">加锁范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">ID &lt; X</td>
+<td style="text-align:center">infinum</td>
+<td style="text-align:center">X</td>
+<td style="text-align:center">(infinum,X]</td>
+</tr>
+<tr>
+<td style="text-align:center">ID &lt;= X</td>
+<td style="text-align:center">infinum</td>
+<td style="text-align:center">X的下一条记录</td>
+<td style="text-align:center">(infinum,X的下一条记录]</td>
+</tr>
+<tr>
+<td style="text-align:center">ID &gt; X</td>
+<td style="text-align:center">X的下一条记录</td>
+<td style="text-align:center">maxnum</td>
+<td style="text-align:center">(X,maxnum]</td>
+</tr>
+<tr>
+<td style="text-align:center">ID &gt;= X</td>
+<td style="text-align:center">X</td>
+<td style="text-align:center">maxnum</td>
+<td style="text-align:center">[X,maxnum]</td>
+</tr>
+</tbody>
+</table>
+<h4 id="事务隔离级别"><a href="#事务隔离级别" class="headerlink" title="事务隔离级别"></a>事务隔离级别</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SHOW</span> <span class="keyword">VARIABLES</span> <span class="keyword">LIKE</span> <span class="string">'%isolation%'</span>;</div></pre></td></tr></table></figure>
+<blockquote>
+<ul>
+<li>Read Uncommited：可以读取未提交记录。此隔离级别，不会使用，忽略。</li>
+<li>Read Committed (RC)：针对当前读，RC隔离级别保证对读取到的记录加锁 (记录锁)，存在幻读现象。</li>
+<li>Repeatable Read (RR)：针对当前读，RR隔离级别保证对读取到的记录加锁 (记录锁)，同时保证对读取的范围加锁，新的满足查询条件的记录不能够插入 (间隙锁)，不存在幻读现象。</li>
+<li>Serializable：Serializable隔离级别下，读写冲突，因此并发度急剧下降，在MySQL/InnoDB下不建议使用。</li>
+</ul>
+</blockquote>
+<h4 id="查看当前锁的状态"><a href="#查看当前锁的状态" class="headerlink" title="查看当前锁的状态"></a>查看当前锁的状态</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> information_schema.INNODB_LOCKS;</div></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">Column</th>
+<th style="text-align:center">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">lock_id</td>
+<td style="text-align:center">锁ID</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_trx_id</td>
+<td style="text-align:center">事务ID, 可以连INNODB_TRX表查事务详情</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_mode</td>
+<td style="text-align:center">锁的模式： S, X, IS, IX, S_GAP, X_GAP, IS_GAP, IX_GAP, or AUTO_INC</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_type</td>
+<td style="text-align:center">锁的类型: 行级锁 或者表级锁</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_table</td>
+<td style="text-align:center">加锁的表</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_index</td>
+<td style="text-align:center">如果是lock_type=’RECORD’ 行级锁 ,为锁住的索引，如果是表锁为null</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_space</td>
+<td style="text-align:center">如果是lock_type=’RECORD’ 行级锁 ,为锁住对象的Tablespace ID，如果是表锁为null</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_page</td>
+<td style="text-align:center">如果是lock_type=’RECORD’ 行级锁 ,为锁住页号，如果是表锁为null</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_rec</td>
+<td style="text-align:center">如果是lock_type=’RECORD’ 行级锁 ,为锁住页号，如果是表锁为null</td>
+</tr>
+<tr>
+<td style="text-align:center">lock_data</td>
+<td style="text-align:center">事务锁住的主键值，若是表锁，则该值为null</td>
+</tr>
+</tbody>
+</table>
+<h3 id="一句简单的加锁分析"><a href="#一句简单的加锁分析" class="headerlink" title="一句简单的加锁分析"></a>一句简单的加锁分析</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">SQL1：<span class="keyword">select</span> * <span class="keyword">from</span> t1 <span class="keyword">where</span> <span class="keyword">id</span> = <span class="number">10</span>;</div><div class="line">SQL2：<span class="keyword">delete</span> <span class="keyword">from</span> t1 <span class="keyword">where</span> <span class="keyword">id</span> = <span class="number">10</span>;</div></pre></td></tr></table></figure>
+<h4 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h4><blockquote>
+<ul>
+<li>前提一：当前系统的隔离级别是什么？</li>
+<li>前提二：id列是不是主键？</li>
+<li>前提三：id列如果不是主键，那么id列上有索引吗？</li>
+<li>前提四：id列上如果有二级索引，那么这个索引是唯一索引吗？</li>
+</ul>
+</blockquote>
+<h4 id="常用组合"><a href="#常用组合" class="headerlink" title="常用组合"></a>常用组合</h4><blockquote>
+<ul>
+<li>组合一：id列是主键，RC隔离级别</li>
+<li>组合二：id列是二级唯一索引，RC隔离级别</li>
+<li>组合三：id列是二级非唯一索引，RC隔离级别</li>
+<li>组合四：id列上没有索引，RC隔离级别</li>
+<li>组合五：id列是主键，RR隔离级别</li>
+<li>组合六：id列是二级唯一索引，RR隔离级别</li>
+<li>组合七：id列是二级非唯一索引，RR隔离级别</li>
+<li>组合八：id列上没有索引，RR隔离级别</li>
+<li>组合九：Serializable隔离级别</li>
+</ul>
+</blockquote>
+<h4 id="分析常用组合"><a href="#分析常用组合" class="headerlink" title="分析常用组合"></a>分析常用组合</h4><h5 id="组合一"><a href="#组合一" class="headerlink" title="组合一"></a>组合一</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6RtaP/medish.jpg" alt="group1"></p>
+<blockquote>
+<p>主键为id,隔离级别是RC，只需要在主键上加<code>X锁</code>。</p>
+</blockquote>
+<h5 id="组合二"><a href="#组合二" class="headerlink" title="组合二"></a>组合二</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6PDep/medish.jpg" alt="group2"></p>
+<blockquote>
+<p>id为唯一索引,假设主键为name,隔离级别是RC。由于id是unique索引，因此delete语句会选择走id列的索引进行where条件的过滤，<br>在找到id=10的记录后，首先会将unique索引上的id=10索引记录加上X锁，同时，会根据读取到的name列，回主键索引(聚簇索引)，<br>然后将聚簇索引上的name = ‘d’ 对应的主键索引项加<code>X锁</code>。</p>
+</blockquote>
+<p>问题：为什么聚簇索引上的记录也要加锁？</p>
+<blockquote>
+<p>如果并发的一个SQL，是通过主键索引来更新：<code>update t1 set id = 100 where name = &#39;d&#39;;</code><br>此时，如果delete语句没有将主键索引上的记录加锁，那么并发的update就会感知不到delete语句的存在，<br>违背了同一记录上的更新/删除需要串行执行的约束。</p>
+</blockquote>
+<h5 id="组合三"><a href="#组合三" class="headerlink" title="组合三"></a>组合三</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6RA8t/medish.jpg" alt="group3"></p>
+<blockquote>
+<p>id为非唯一索引,隔离级别是RC,相对于组合一、二,组合三又发生了变化,id列上的约束又降低了，id列不再唯一，只有一个普通的索引。<br>首先，id列索引上，满足id = 10查询条件的记录，均已加锁。同时，这些记录对应的主键索引上的记录也都加上了锁。<br>与组合二唯一的区别在于，组合二最多只有一个满足等值查询的记录，而组合三会将所有满足查询条件的记录都加锁。</p>
+</blockquote>
+<h5 id="组合四"><a href="#组合四" class="headerlink" title="组合四"></a>组合四</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6Rt0M/medish.jpg" alt="group4"></p>
+<blockquote>
+<p>id无索引,隔离级别是RC,由于id列上没有索引，因此只能走聚簇索引，进行全部扫描。<br>从图中可以看到，满足删除条件的记录有两条，但是，聚簇索引上所有的记录，都被加上了X锁。<br>无论记录是否满足条件，全部被加上X锁。既不是加表锁，也不是在满足条件的记录上加行锁。</p>
+</blockquote>
+<h5 id="组合五-组合一"><a href="#组合五-组合一" class="headerlink" title="组合五 = 组合一"></a>组合五 = 组合一</h5><h5 id="组合六-组合二"><a href="#组合六-组合二" class="headerlink" title="组合六 = 组合二"></a>组合六 = 组合二</h5><h5 id="组合七"><a href="#组合七" class="headerlink" title="组合七"></a>组合七</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6R7wu/medish.jpg" alt="group7"></p>
+<blockquote>
+<p>id为非唯一索引,隔离级别是RR,首先，通过id索引定位到第一条满足查询条件的记录，加记录上的X锁，加GAP锁，然后加主键聚簇索引上的记录X锁，然后返回；<br>然后读取下一条，重复进行。直至进行到第一条不满足条件的记录，此时，不需要加记录X锁，但是仍旧需要加GAP锁，最后返回结束。</p>
+</blockquote>
+<h5 id="组合八"><a href="#组合八" class="headerlink" title="组合八"></a>组合八</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6Rf3q/medish.jpg" alt="group7"></p>
+<blockquote>
+<p>如图，这是一个很恐怖的现象。首先，聚簇索引上的所有记录，都被加上了X锁。其次，聚簇索引每条记录间的间隙(GAP)，也同时被加上了GAP锁。这个示例表，只有6条记录，一共需要6个记录锁，7个GAP锁。试想，如果表上有1000万条记录呢？<br>在这种情况下，这个表上，除了不加锁的快照度，其他任何加锁的并发SQL，均不能执行，不能更新，不能删除，不能插入，全表被锁死。<br>所以在Repeatable Read隔离级别下，如果进行全表扫描的当前读，那么会锁上表中的所有记录，同时会锁上聚簇索引内的所有GAP，杜绝所有的并发 更新/删除/插入 操作。</p>
+</blockquote>
+<h5 id="组合九"><a href="#组合九" class="headerlink" title="组合九"></a>组合九</h5><blockquote>
+<p>Serializable隔离级别，影响的是<code>SQL1：select * from t1 where id = 10;</code> 这条SQL。<br>在RC，RR隔离级别下，都是快照读，不加锁。但是在Serializable隔离级别，SQL1会加读锁，也就是说快照读不复存在。<br>在MySQL/InnoDB中，所谓的读不加锁，并不适用于所有的情况，而是隔离级别相关的。Serializable隔离级别，读不加锁就不再成立，所有的读操作，都是当前读。</p>
+</blockquote>
+<h3 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h3><h4 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h4><p><img src="https://user-gold-cdn.xitu.io/2018/8/9/1651f0bf1943e565?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="deadlock"></p>
+<blockquote>
+<p>死锁:是指两个或两个以上的事务在执行过程中，因争夺资源而造成的一种互相等待的现象。<br>说明有等待才会有死锁，解决死锁可以通过去掉等待，比如回滚事务。<br>如果出现回滚，通常来说InnoDB会选择回滚权重较小的事务，也就是<code>undo</code>较小的事务。</p>
+<p>假设我们有一个用户表,然后插入几条数据：</p>
+</blockquote>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`user`</span> (</div><div class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">unsigned</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</div><div class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">11</span>) <span class="built_in">CHARACTER</span> <span class="keyword">SET</span> utf8mb4 <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</div><div class="line">  <span class="string">`comment`</span> <span class="built_in">varchar</span>(<span class="number">11</span>) <span class="built_in">CHARACTER</span> <span class="keyword">SET</span> utf8 <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</div><div class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</div><div class="line">  <span class="keyword">KEY</span> <span class="string">`index_name`</span> (<span class="string">`name`</span>)</div><div class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">0</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4 <span class="keyword">COLLATE</span>=utf8mb4_bin;</div></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">insert</span> <span class="keyword">user</span> <span class="keyword">select</span> <span class="number">20</span>,<span class="number">333</span>,<span class="number">333</span>;</div><div class="line"><span class="keyword">insert</span> <span class="keyword">user</span> <span class="keyword">select</span> <span class="number">25</span>,<span class="number">555</span>,<span class="number">555</span>;</div><div class="line"><span class="keyword">insert</span> <span class="keyword">user</span> <span class="keyword">select</span> <span class="number">20</span>,<span class="number">999</span>,<span class="number">999</span>;</div></pre></td></tr></table></figure>
+<blockquote>
+<p>然后我们开启事务 <code>A</code> 跟 事务<code>B</code>：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">事件点</th>
+<th style="text-align:center">事务A</th>
+<th style="text-align:center">事务B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">1</td>
+<td style="text-align:center">begin;</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">begin;</td>
+</tr>
+<tr>
+<td style="text-align:center">3</td>
+<td style="text-align:center">delete from user where name = ‘777’;</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">4</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">delete from user where name = ‘666’;</td>
+</tr>
+<tr>
+<td style="text-align:center">5</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">insert user select 26,’666’,’666’;</td>
+</tr>
+<tr>
+<td style="text-align:center">6</td>
+<td style="text-align:center">insert user select 27,’777’,’777’;</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">7</td>
+<td style="text-align:center">ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction</td>
+<td style="text-align:center"></td>
+</tr>
+<tr>
+<td style="text-align:center">8</td>
+<td style="text-align:center"></td>
+<td style="text-align:center">Query OK, 1 row affected (14.32 sec) Records: 1 Duplicates: 0 Warnings: 0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>可以看见事务A出现被回滚了，而事务B成功执行。 具体每个时间点发生了什么呢?</strong></p>
+<blockquote>
+<ul>
+<li>时间点3：事务A删除需要对777这个索引加上next-Key锁，但是其不存在，所以只对555-999之间加间隙锁</li>
+<li>时间点4：同理事务B也对555-999之间加间隙锁。间隙锁之间是兼容的,所以正常执行，此时两边都有一个间隙锁</li>
+<li>时间点5：事务B，执行Insert操作，首先插入意向锁，但是555-999之间有间隙锁，由于插入意向锁和间隙锁冲突，事务B阻塞，等待事务A释放间隙锁</li>
+<li>时间点6：事务A同理，等待事务B释放间隙锁。于是出现了A-&gt;B,B-&gt;A回路等待。</li>
+<li>时间点7：事务管理器检查到死锁选择回滚事务A</li>
+<li>时间点8：事务B插入操作执行成功。</li>
+</ul>
+</blockquote>
+<p><img src="/img/lock/deadlock.png"></p>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><blockquote>
+<ul>
+<li>方案一：隔离级别降级为RC，在RC级别下不会加入间隙锁，所以就不会出现毛病了，但是在RC级别下会出现幻读，可提交读都破坏隔离性的毛病，所以这个方案不行。</li>
+<li>方案二：隔离级别升级为可序列化，经过测试后发现不会出现这个问题，但是在可序列化级别下，性能会较低，会出现较多的锁等待，同样的也不考虑。</li>
+<li>方案三：修改代码逻辑，不要直接删，改成每个数据由业务逻辑去判断哪些是更新，哪些是删除，那些是添加，这个工作量稍大，写这个直接删除的逻辑就是为了不做这些复杂的事的，所以这个方案先不考虑。</li>
+<li>方案四：较少的修改代码逻辑，在删除之前，可以通过快照查询(不加锁)，如果查询没有结果，则直接插入，如果有通过主键进行删除，在之前第三节实验2中，通过唯一索引会降级为记录锁，所以不存在间隙锁。</li>
+</ul>
+</blockquote>
+<h4 id="防止死锁"><a href="#防止死锁" class="headerlink" title="防止死锁"></a>防止死锁</h4><blockquote>
+<ul>
+<li>以固定的顺序访问表和行。交叉访问更容易造成事务等待回路。</li>
+<li>尽量避免大事务，占有的资源锁越多，越容易出现死锁。建议拆成小事务。</li>
+<li>降低隔离级别。如果业务允许，将隔离级别调低也是较好的选择，比如将隔离级别从RR调整为RC，可以避免掉很多因为gap锁造成的死锁。</li>
+<li>为表添加合理的索引。防止没有索引出现表锁，出现的死锁的概率会突增。</li>
+</ul>
+</blockquote>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>做一个简单的总结，要做的完全掌握MySQL/InnoDB的加锁规则，甚至是其他任何数据库的加锁规则，需要具备以下的一些知识点：</p>
+<blockquote>
+<ul>
+<li>了解数据库的一些基本理论知识：数据的存储格式 (堆组织表 vs 聚簇索引表)；并发控制协议 (MVCC vs Lock-Based CC)；Two-Phase Locking；数据库的隔离级别定义 (Isolation Level)；</li>
+<li>了解SQL本身的执行计划 (主键扫描 vs 唯一键扫描 vs 范围扫描 vs 全表扫描)；</li>
+<li>了解数据库本身的一些实现细节 (过滤条件提取；Index Condition Pushdown；Semi-Consistent Read)；</li>
+<li>了解死锁产生的原因及分析的方法 (加锁顺序不一致；分析每个SQL的加锁顺序)</li>
+</ul>
+</blockquote>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/02/restructure/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="chen">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Vayi">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/02/restructure/" itemprop="url">重构 (附源码)</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-02T16:46:00+08:00">
+                2018-08-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p><strong>个人理解</strong>：<em>计算机理解代码很简单,因为不管你怎么写终究会编译成字节码,所以重构的定义简单点来说就是让你写的代码能让其他人看懂。</em></p>
+<p><strong>定义（《重构》作者）</strong>：<em>对软件内部结构的一种调整,目的是在不改变软件可观察行为的前提下,提高其可理解性,降低其修改成本。</em></p>
+<h3 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h3><p>代码大家都知道怎么写,多余的也不多说了,直接上干(dao)货(ban)实例非常简单,这是一个影片出租店用的程序,计算每一位顾客的消费金额并打印详单。<br>操作者告诉程序：租客租了那些影片、租期多长,程序便根据租赁时间和影片类型来算出费用。</p>
+<p>影片（Movie）分三类：常规片、儿童片、新片,出了计算费用还需要为常客计算积分,积分会根据租的影片种类是否为新片会有所不同。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 影片</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Movie</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> regular = <span class="number">0</span>; <span class="comment">//常规片</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> new_release = <span class="number">1</span>; <span class="comment">//新片</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> childrens = <span class="number">2</span>; <span class="comment">//儿童片</span></div><div class="line"></div><div class="line">    <span class="keyword">private</span> String title;</div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> priceCode;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Movie</span><span class="params">(String title, <span class="keyword">int</span> priceCode)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.title = title;</div><div class="line">        <span class="keyword">this</span>.priceCode = priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getTitle</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> title;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setTitle</span><span class="params">(String title)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.title = title;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPriceCode</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPriceCode</span><span class="params">(<span class="keyword">int</span> priceCode)</span> </span>&#123;</div><div class="line">        <span class="keyword">this</span>.priceCode = priceCode;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 租赁</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Rental</span> </span>&#123;</div><div class="line">    </div><div class="line">    <span class="keyword">private</span> Movie movie; <span class="comment">// 租的电影</span></div><div class="line">    <span class="keyword">private</span> <span class="keyword">int</span> dayRented; <span class="comment">// 租的时间</span></div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Rental</span><span class="params">(Movie movie, <span class="keyword">int</span> dayRented)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.movie = movie;</div><div class="line">        <span class="keyword">this</span>.dayRented = dayRented;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> Movie <span class="title">getMovie</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> movie;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getDayRented</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> dayRented;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 消费者</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Customer</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="keyword">private</span> Vector rentals = <span class="keyword">new</span> Vector(); <span class="comment">// 存租的影片</span></div><div class="line">    <span class="keyword">private</span> String name;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Customer</span><span class="params">(String name)</span> </span>&#123;</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        <span class="keyword">this</span>.name = name;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addRental</span><span class="params">(Rental arg)</span> </span>&#123;</div><div class="line">        rentals.addElement(arg);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> name;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">statement</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">double</span> totalAmount = <span class="number">0</span>;</div><div class="line">        <span class="keyword">int</span> frequentRenterPoints = <span class="number">0</span>;</div><div class="line">        Enumeration rentalss = rentals.elements();</div><div class="line">        String result = <span class="string">"RentalNew Record for"</span> + <span class="string">" "</span> + getName() + <span class="string">"\n"</span>;</div><div class="line">        <span class="keyword">while</span> (rentalss.hasMoreElements()) &#123;</div><div class="line">            <span class="keyword">double</span> thisAmount = <span class="number">0</span>;</div><div class="line">            Rental each = (Rental) rentalss.nextElement();</div><div class="line"></div><div class="line">            <span class="keyword">switch</span> (each.getMovie().getPriceCode()) &#123;</div><div class="line">                <span class="keyword">case</span> Movie.regular:</div><div class="line">                    thisAmount += <span class="number">2</span>;</div><div class="line">                    <span class="keyword">if</span> (each.getDayRented() &gt; <span class="number">2</span>)</div><div class="line">                        thisAmount += (each.getDayRented() - <span class="number">2</span>) * <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Movie.new_release:</div><div class="line">                    thisAmount += each.getDayRented() * <span class="number">3</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line"></div><div class="line">                <span class="keyword">case</span> Movie.childrens:</div><div class="line">                    thisAmount += <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">if</span> (each.getDayRented() &gt; <span class="number">3</span>)</div><div class="line">                        thisAmount += (each.getDayRented() - <span class="number">3</span>) * <span class="number">1.5</span>;</div><div class="line">                    <span class="keyword">break</span>;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">//积分  每借一张加1个积分</span></div><div class="line">            frequentRenterPoints++;</div><div class="line">            <span class="comment">//积分累加条件  新版本的片子,借的时间大于1天</span></div><div class="line">            <span class="keyword">if</span> ((each.getMovie().getPriceCode() == Movie.new_release) &amp;&amp; each.getDayRented() &gt; <span class="number">1</span>) &#123;</div><div class="line">                frequentRenterPoints++;</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            result += <span class="string">"\t"</span> + each.getMovie().getTitle() + <span class="string">"\t"</span></div><div class="line">                    + String.valueOf(thisAmount) + <span class="string">"\n"</span>;</div><div class="line"></div><div class="line">            totalAmount += thisAmount;</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        result += <span class="string">"Amount owed is "</span> + String.valueOf(totalAmount) + <span class="string">"\n"</span>;</div><div class="line">        result += <span class="string">"You earned "</span> + String.valueOf(frequentRenterPoints) + <span class="string">" "</span></div><div class="line">                + <span class="string">"frequent renter points"</span>;</div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Customer里的statement()方法就是生成详单的函数,也是我们本次重构的入口。那重构之前我们先思考几个问题,你第一眼看到这个statement()方法的时候是怎么想的？<br>首先肯定会说它设计不好,因为没有面向对象实思想,并且后期维护起来也很费人力。<br><strong>假如我们的用户需求有修改,不是打印txt这种格式的文本,而是输出Json或者Html格式的内容的话</strong>,你会发现很难修改,然后往往就是复制一份,接着改改改,编译通过,能跑就ok了<br>这样确实可以,<strong>但如果计费的标准也发生变化了呢?</strong>,那这个时候你得同时修改两个方法,<br>并且还要保证两处修改的一致性,如果后续还需要修改的话就会越积累越多,CV大法的问题就浮现出来了,所以这个时候就需要重构来拯救了。（越早重构越好,没事的时候就看看代码还能不能重构）</p>
+<p>注：如果你发现自己需要为程序添加一个特性,而代码结构让你没法很方便的添加的时候,那么就先<br>    重构这个程序,使特性可以很方便的添加了再添加特性</p>
+<h4 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h4><p>首先开始之前给大家看看同一段代码重构前后的对比<br><img src="/img/restructure/restruct.png"></p>
+<p>代码量少了80%左右,并且结构更清晰了,可扩展性更好,耦合性更低了</p>
+<h4 id="重构第一步"><a href="#重构第一步" class="headerlink" title="重构第一步"></a>重构第一步</h4><p>建立测试类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 测试类</span></div><div class="line"><span class="comment"> *</span></div><div class="line"><span class="comment"> * <span class="doctag">@author</span> vayi</span></div><div class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/7/30</span></div><div class="line"><span class="comment"> * <span class="doctag">@since</span> 0.0.1</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">test01</span> </span>&#123;</div><div class="line"></div><div class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</div><div class="line">        System.out.println(<span class="string">"=========================重构前结果========================="</span>);</div><div class="line">        Movie mov = <span class="keyword">new</span> Movie(<span class="string">"xxx"</span>, <span class="number">2</span>);</div><div class="line">        Rental ren = <span class="keyword">new</span> Rental(mov, <span class="number">8</span>);</div><div class="line">        Customer cus = <span class="keyword">new</span> Customer(<span class="string">"Cheng"</span>);</div><div class="line">        cus.addRental(ren);</div><div class="line"></div><div class="line">        System.out.println(cus.statement());</div><div class="line">        System.out.println(<span class="string">"=========================重构前结果========================="</span>);</div><div class="line"></div><div class="line">        System.out.println(<span class="string">"=========================重构后结果========================="</span>);</div><div class="line">        MovieNew newMov = <span class="keyword">new</span> MovieNew(<span class="string">"xxx"</span>, <span class="number">2</span>);</div><div class="line">        RentalNew newRen = <span class="keyword">new</span> RentalNew(newMov, <span class="number">8</span>);</div><div class="line">        CustomerNew cusNew = <span class="keyword">new</span> CustomerNew(<span class="string">"Cheng"</span>);</div><div class="line">        cusNew.addRentalNew(newRen);</div><div class="line"></div><div class="line">        System.out.println(cusNew.statement());</div><div class="line">        System.out.println(<span class="string">"=========================重构后结果========================="</span>);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>切记：重构第一步先建立相应部分的测试类,一定不能影响原来结果的运行,并且重构一块的时候<br>     就需要测试一次,看结果是否一致。</p>
+<h4 id="分解并重组statement"><a href="#分解并重组statement" class="headerlink" title="分解并重组statement()"></a>分解并重组statement()</h4><p>首先我们需要找到重构部分的逻辑泥团,很明显statement()里面的逻辑泥团就是这个switch语句,那我们就把这个地方单独提出一个函数来进行计算,<br>首先找出这个函数内部的局部变量跟参数,我们可以找到一个是each一个是thisAmount,前者并没有被修改,后者会被修改,所以这里我们尽量把不用修改的当参数传递进去,<br>如果是会被修改的当参数就要认真考虑是否可行了,如果只有一个变量会被修改,那我们可以把它当作返回值</p>
+<p><img src="/img/restructure/amountFor.png"></p>
+<p>直接用IDEA的话可以用 <strong>CTRL+ALT+M</strong> 组合键来提取选中的内容为方法<br>然后我们也把函数内的变量名修改下,增加可阅读性,同样是可以用快捷键来修改变量名 <strong>SHIFT+F6</strong></p>
+<p><img src="/img/restructure/changeName.png"></p>
+<p>每次重构完一部分,哪怕很小的一部分也要先测试一遍,只有编译测试通过了才可以进行下一步的重构<br>我们继续看这个提取出来的amountFor()函数,发现里面只用到了Rental类相关的操作,但是却并没有Customer类的操作,<br>所以我们怀疑这里是不是放错了位置,我们把amountFor移动到Rental里面,顺便方法名也改为getCharge(),同样的移动方法也有快捷键: <strong>F6</strong></p>
+<p><img src="/img/restructure/getCharge.png"></p>
+<p>这里就先对getCharge的操作到此为止了,我们再回到statement()函数来<br>这个时候我们已经把switch提取出来了,我们可以看到thisAmount这个变量接收一次getCharge的结果之后就没有改变了<br>那么我们完全可以直接用getCharge来替代它</p>
+<p><img src="/img/restructure/removeAmount.png"></p>
+<p>同样的,重构完之后编译测试一次,保证自己没有破坏任何东西<br>然后回到我们的statement()函数,发现我们的积分计算也跟Rental有关,所以我们可以直接放到Rental类里面去<br>由于这里的积分变量frequentRenterPoints有了初始值，并且是用来统计的，所以我们不用当参数传递进去直接接收返回值进行累加就可以了</p>
+<p><img src="/img/restructure/getFre.png"><br><img src="/img/restructure/getFrequentRenterPoints.png"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><a href="https://github.com/Yiaichen/javaDemo/tree/master/javaDemo" target="_blank" rel="external">源码地址</a><br>重构部分的源码在restructure目录下,还有一些其他demo,大家可自行学习</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/15/semaphore/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -414,6 +1058,7 @@
 <p><strong>ReentrantLock</strong>跟<strong>Condition</strong>大家不明白的先自行度娘，后面我抽空再补上，emmmm…<br>ReentrantLock在这里再做一重锁的判断，确保生产者跟消费者都是平衡的<br>如果不加ReentrantLock会怎么样，因为我们是用的Condition进行一个相互唤醒的操作，不用ReentrantLock的话可能会报<strong>IllegalMonitorStateException</strong>的异常</p>
 <p>输出的话就给大家截个图：<br><img src="/img/thread/out.png"></p>
 <h3 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h3><p>Semaphore semaphore = new Semaphore(1)其实只是初始化多少个许可<br>acquire()相当于动态的减少许可，相应的release()可以动态的增加许可<br>Semaphore提供的限制并发线程的功能，此功能在默认的synchronized种是不提供的</p>
+<p><a href="https://github.com/Yiaichen/javaDemo/tree/master/javaDemo" target="_blank" rel="external">源码地址</a><br>源码在thread目录下,还有一些其他demo,大家可自行学习</p>
 
           
         
@@ -853,7 +1498,8 @@
       
         
           
-            <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">--增加大字段项  </div><div class="line">alter table 需要修改的表 add introduce clob;  </div><div class="line">--将需要改成大字段的项内容copy到大字段中  </div><div class="line">update 需要修改的表 <span class="built_in">set</span> introduce=需要修改的字段;</div><div class="line">--删除原有字段  </div><div class="line">alter table 需要修改的表 drop column 需要修改的字段;  </div><div class="line">--将大字段名改成原字段名</div><div class="line">alter table t_sim_activity rename column introduce to 需要修改的字段;</div></pre></td></tr></table></figure>
+            <p>因为Oracle是没办法直接进行字段转化的,所以这里我们提供一个取巧的办法:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">--增加大字段项  </div><div class="line">alter table 需要修改的表 add introduce clob;  </div><div class="line">--将需要改成大字段的项内容copy到大字段中  </div><div class="line">update 需要修改的表 <span class="built_in">set</span> introduce=需要修改的字段;</div><div class="line">--删除原有字段  </div><div class="line">alter table 需要修改的表 drop column 需要修改的字段;  </div><div class="line">--将大字段名改成原字段名</div><div class="line">alter table t_sim_activity rename column introduce to 需要修改的字段;</div></pre></td></tr></table></figure>
           
         
       
@@ -1268,7 +1914,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1290,7 +1936,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
