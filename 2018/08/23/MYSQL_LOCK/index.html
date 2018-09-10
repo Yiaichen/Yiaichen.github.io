@@ -114,20 +114,20 @@
 <meta property="og:site_name" content="Vayi">
 <meta property="og:description" content="InnoDB MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control)  在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/8/8/1651714afdc0f320?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6RtaP/medish.jpg">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6PDep/medish.jpg">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6RA8t/medish.jpg">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6Rt0M/medish.jpg">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6R7wu/medish.jpg">
-<meta property="og:image" content="http://photo.yupoo.com/hedengcheng/DnJ6Rf3q/medish.jpg">
-<meta property="og:image" content="https://user-gold-cdn.xitu.io/2018/8/9/1651f0bf1943e565?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
-<meta property="og:image" content="http://yoursite.com/img/lock/deadlock.png">
-<meta property="og:updated_time" content="2018-08-23T16:01:19.371Z">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/gap.png">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish2.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish3.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish4.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish5.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/medish6.jpg">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/dead.png">
+<meta property="og:image" content="http://pic.caigoubao.cc/606618/deadlock.png">
+<meta property="og:updated_time" content="2018-09-10T14:00:16.016Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="MYSQL锁及死锁的产生、解决">
 <meta name="twitter:description" content="InnoDB MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control)  在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回">
-<meta name="twitter:image" content="https://user-gold-cdn.xitu.io/2018/8/8/1651714afdc0f320?imageView2/0/w/1280/h/960/format/webp/ignore-error/1">
+<meta name="twitter:image" content="http://pic.caigoubao.cc/606618/gap.png">
 
 
 
@@ -447,8 +447,8 @@
 <h5 id="意向锁"><a href="#意向锁" class="headerlink" title="意向锁"></a>意向锁</h5><p>意向锁在InnoDB中是表级锁,和他的名字一样他是用来表达一个事务想要获取什么。意向锁分为:</p>
 <blockquote>
 <ul>
-<li>IS-意向共享锁:表达一个事务想要获取一张表中某几行的共享锁。</li>
-<li>IX-意向排他锁:表达一个事务想要获取一张表中某几行的排他锁。</li>
+<li>IS-意向共享锁(lock in share mode):表达一个事务想要获取一张表中某几行的共享锁。</li>
+<li>IX-意向排他锁(for update):表达一个事务想要获取一张表中某几行的排他锁。</li>
 </ul>
 <p>这个锁有什么用呢？为什么需要这个锁呢？<br>首先说一下如果没有这个锁，如果要给这个表加上表锁，一般的做法是去遍历每一行看看他是否有行锁，这样的话效率太低。<br>而我们有意向锁，只需要判断是否有意向锁即可，不需要再去一行行的去扫描。</p>
 </blockquote>
@@ -494,7 +494,7 @@
 </tbody>
 </table>
 <p><strong>注：意向锁之间兼容，排它锁（包含意向）跟共享锁冲突，共享锁（包含意向）之间是兼容的</strong></p>
-<h5 id="间隙锁-gap锁"><a href="#间隙锁-gap锁" class="headerlink" title="间隙锁(gap锁)"></a>间隙锁(gap锁)</h5><p><img src="https://user-gold-cdn.xitu.io/2018/8/8/1651714afdc0f320?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="gap"></p>
+<h5 id="间隙锁-gap锁"><a href="#间隙锁-gap锁" class="headerlink" title="间隙锁(gap锁)"></a>间隙锁(gap锁)</h5><p><img src="http://pic.caigoubao.cc/606618/gap.png" alt="gap"></p>
 <blockquote>
 <p>间隙锁顾名思义锁间隙，不锁记录。锁间隙的意思就是锁定某一个范围，间隙锁又叫gap锁，其不会阻塞其他的gap锁，但是会阻塞插入间隙锁，这也是用来防止幻读的关键。</p>
 </blockquote>
@@ -616,11 +616,11 @@
 <li>组合九：Serializable隔离级别</li>
 </ul>
 </blockquote>
-<h4 id="分析常用组合"><a href="#分析常用组合" class="headerlink" title="分析常用组合"></a>分析常用组合</h4><h5 id="组合一"><a href="#组合一" class="headerlink" title="组合一"></a>组合一</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6RtaP/medish.jpg" alt="group1"></p>
+<h4 id="分析常用组合"><a href="#分析常用组合" class="headerlink" title="分析常用组合"></a>分析常用组合</h4><h5 id="组合一"><a href="#组合一" class="headerlink" title="组合一"></a>组合一</h5><p><img src="http://pic.caigoubao.cc/606618/medish.jpg" alt="group1"></p>
 <blockquote>
 <p>主键为id,隔离级别是RC，只需要在主键上加<code>X锁</code>。</p>
 </blockquote>
-<h5 id="组合二"><a href="#组合二" class="headerlink" title="组合二"></a>组合二</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6PDep/medish.jpg" alt="group2"></p>
+<h5 id="组合二"><a href="#组合二" class="headerlink" title="组合二"></a>组合二</h5><p><img src="http://pic.caigoubao.cc/606618/medish2.jpg" alt="group2"></p>
 <blockquote>
 <p>id为唯一索引,假设主键为name,隔离级别是RC。由于id是unique索引，因此delete语句会选择走id列的索引进行where条件的过滤，<br>在找到id=10的记录后，首先会将unique索引上的id=10索引记录加上X锁，同时，会根据读取到的name列，回主键索引(聚簇索引)，<br>然后将聚簇索引上的name = ‘d’ 对应的主键索引项加<code>X锁</code>。</p>
 </blockquote>
@@ -628,26 +628,26 @@
 <blockquote>
 <p>如果并发的一个SQL，是通过主键索引来更新：<code>update t1 set id = 100 where name = &#39;d&#39;;</code><br>此时，如果delete语句没有将主键索引上的记录加锁，那么并发的update就会感知不到delete语句的存在，<br>违背了同一记录上的更新/删除需要串行执行的约束。</p>
 </blockquote>
-<h5 id="组合三"><a href="#组合三" class="headerlink" title="组合三"></a>组合三</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6RA8t/medish.jpg" alt="group3"></p>
+<h5 id="组合三"><a href="#组合三" class="headerlink" title="组合三"></a>组合三</h5><p><img src="http://pic.caigoubao.cc/606618/medish3.jpg" alt="group3"></p>
 <blockquote>
 <p>id为非唯一索引,隔离级别是RC,相对于组合一、二,组合三又发生了变化,id列上的约束又降低了，id列不再唯一，只有一个普通的索引。<br>首先，id列索引上，满足id = 10查询条件的记录，均已加锁。同时，这些记录对应的主键索引上的记录也都加上了锁。<br>与组合二唯一的区别在于，组合二最多只有一个满足等值查询的记录，而组合三会将所有满足查询条件的记录都加锁。</p>
 </blockquote>
-<h5 id="组合四"><a href="#组合四" class="headerlink" title="组合四"></a>组合四</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6Rt0M/medish.jpg" alt="group4"></p>
+<h5 id="组合四"><a href="#组合四" class="headerlink" title="组合四"></a>组合四</h5><p><img src="http://pic.caigoubao.cc/606618/medish4.jpg" alt="group4"></p>
 <blockquote>
 <p>id无索引,隔离级别是RC,由于id列上没有索引，因此只能走聚簇索引，进行全部扫描。<br>从图中可以看到，满足删除条件的记录有两条，但是，聚簇索引上所有的记录，都被加上了X锁。<br>无论记录是否满足条件，全部被加上X锁。既不是加表锁，也不是在满足条件的记录上加行锁。</p>
 </blockquote>
-<h5 id="组合五-组合一"><a href="#组合五-组合一" class="headerlink" title="组合五 = 组合一"></a>组合五 = 组合一</h5><h5 id="组合六-组合二"><a href="#组合六-组合二" class="headerlink" title="组合六 = 组合二"></a>组合六 = 组合二</h5><h5 id="组合七"><a href="#组合七" class="headerlink" title="组合七"></a>组合七</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6R7wu/medish.jpg" alt="group7"></p>
+<h5 id="组合五-组合一"><a href="#组合五-组合一" class="headerlink" title="组合五 = 组合一"></a>组合五 = 组合一</h5><h5 id="组合六-组合二"><a href="#组合六-组合二" class="headerlink" title="组合六 = 组合二"></a>组合六 = 组合二</h5><h5 id="组合七"><a href="#组合七" class="headerlink" title="组合七"></a>组合七</h5><p><img src="http://pic.caigoubao.cc/606618/medish5.jpg" alt="group7"></p>
 <blockquote>
 <p>id为非唯一索引,隔离级别是RR,首先，通过id索引定位到第一条满足查询条件的记录，加记录上的X锁，加GAP锁，然后加主键聚簇索引上的记录X锁，然后返回；<br>然后读取下一条，重复进行。直至进行到第一条不满足条件的记录，此时，不需要加记录X锁，但是仍旧需要加GAP锁，最后返回结束。</p>
 </blockquote>
-<h5 id="组合八"><a href="#组合八" class="headerlink" title="组合八"></a>组合八</h5><p><img src="http://photo.yupoo.com/hedengcheng/DnJ6Rf3q/medish.jpg" alt="group7"></p>
+<h5 id="组合八"><a href="#组合八" class="headerlink" title="组合八"></a>组合八</h5><p><img src="http://pic.caigoubao.cc/606618/medish6.jpg" alt="group7"></p>
 <blockquote>
 <p>如图，这是一个很恐怖的现象。首先，聚簇索引上的所有记录，都被加上了X锁。其次，聚簇索引每条记录间的间隙(GAP)，也同时被加上了GAP锁。这个示例表，只有6条记录，一共需要6个记录锁，7个GAP锁。试想，如果表上有1000万条记录呢？<br>在这种情况下，这个表上，除了不加锁的快照度，其他任何加锁的并发SQL，均不能执行，不能更新，不能删除，不能插入，全表被锁死。<br>所以在Repeatable Read隔离级别下，如果进行全表扫描的当前读，那么会锁上表中的所有记录，同时会锁上聚簇索引内的所有GAP，杜绝所有的并发 更新/删除/插入 操作。</p>
 </blockquote>
 <h5 id="组合九"><a href="#组合九" class="headerlink" title="组合九"></a>组合九</h5><blockquote>
 <p>Serializable隔离级别，影响的是<code>SQL1：select * from t1 where id = 10;</code> 这条SQL。<br>在RC，RR隔离级别下，都是快照读，不加锁。但是在Serializable隔离级别，SQL1会加读锁，也就是说快照读不复存在。<br>在MySQL/InnoDB中，所谓的读不加锁，并不适用于所有的情况，而是隔离级别相关的。Serializable隔离级别，读不加锁就不再成立，所有的读操作，都是当前读。</p>
 </blockquote>
-<h3 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h3><h4 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h4><p><img src="https://user-gold-cdn.xitu.io/2018/8/9/1651f0bf1943e565?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" alt="deadlock"></p>
+<h3 id="举个栗子"><a href="#举个栗子" class="headerlink" title="举个栗子"></a>举个栗子</h3><h4 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h4><p><img src="http://pic.caigoubao.cc/606618/dead.png" alt="deadlock"></p>
 <blockquote>
 <p>死锁:是指两个或两个以上的事务在执行过程中，因争夺资源而造成的一种互相等待的现象。<br>说明有等待才会有死锁，解决死锁可以通过去掉等待，比如回滚事务。<br>如果出现回滚，通常来说InnoDB会选择回滚权重较小的事务，也就是<code>undo</code>较小的事务。</p>
 <p>假设我们有一个用户表,然后插入几条数据：</p>
@@ -711,7 +711,7 @@
 <p><strong>可以看见事务A出现被回滚了，而事务B成功执行。 具体每个时间点发生了什么呢?</strong></p>
 <blockquote>
 <ul>
-<li>时间点3：事务A删除需要对777这个索引加上next-Key锁，但是其不存在，所以只对555-999之间加间隙锁</li>
+<li>时间点3：事务A删除需要对777这个索引加上X锁，但是其不存在，所以只对555-999之间加间隙锁</li>
 <li>时间点4：同理事务B也对555-999之间加间隙锁。间隙锁之间是兼容的,所以正常执行，此时两边都有一个间隙锁</li>
 <li>时间点5：事务B，执行Insert操作，首先插入意向锁，但是555-999之间有间隙锁，由于插入意向锁和间隙锁冲突，事务B阻塞，等待事务A释放间隙锁</li>
 <li>时间点6：事务A同理，等待事务B释放间隙锁。于是出现了A-&gt;B,B-&gt;A回路等待。</li>
@@ -719,13 +719,11 @@
 <li>时间点8：事务B插入操作执行成功。</li>
 </ul>
 </blockquote>
-<p><img src="/img/lock/deadlock.png"></p>
+<p><img src="http://pic.caigoubao.cc/606618/deadlock.png" alt="deaddlock"></p>
 <h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><blockquote>
 <ul>
 <li>方案一：隔离级别降级为RC，在RC级别下不会加入间隙锁，所以就不会出现毛病了，但是在RC级别下会出现幻读，可提交读都破坏隔离性的毛病，所以这个方案不行。</li>
-<li>方案二：隔离级别升级为可序列化，经过测试后发现不会出现这个问题，但是在可序列化级别下，性能会较低，会出现较多的锁等待，同样的也不考虑。</li>
-<li>方案三：修改代码逻辑，不要直接删，改成每个数据由业务逻辑去判断哪些是更新，哪些是删除，那些是添加，这个工作量稍大，写这个直接删除的逻辑就是为了不做这些复杂的事的，所以这个方案先不考虑。</li>
-<li>方案四：较少的修改代码逻辑，在删除之前，可以通过快照查询(不加锁)，如果查询没有结果，则直接插入，如果有通过主键进行删除，在之前第三节实验2中，通过唯一索引会降级为记录锁，所以不存在间隙锁。</li>
+<li>方案二：较少的修改代码逻辑，在删除之前，可以通过快照查询(不加锁)，如果查询没有结果，则直接插入，如果有通过主键进行删除，在之前第三节实验2中，通过唯一索引会降级为记录锁，所以不存在间隙锁。</li>
 </ul>
 </blockquote>
 <h4 id="防止死锁"><a href="#防止死锁" class="headerlink" title="防止死锁"></a>防止死锁</h4><blockquote>
