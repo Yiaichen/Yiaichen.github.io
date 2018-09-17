@@ -90,7 +90,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="MYSQL," />
 
 
 
@@ -107,9 +107,10 @@
 
 
 <meta name="description" content="InnoDB MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control)  在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回">
+<meta name="keywords" content="MYSQL">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Vayi">
-<meta property="og:url" content="http://yoursite.com/2018/09/10/MYSQL_LOCK/index.html">
+<meta property="og:title" content="MYSQL锁以及死锁的产生跟解决">
+<meta property="og:url" content="http://yoursite.com/2018/08/17/MYSQL_LOCK/index.html">
 <meta property="og:site_name" content="Vayi">
 <meta property="og:description" content="InnoDB MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control)  在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回">
 <meta property="og:locale" content="zh-Hans">
@@ -122,9 +123,9 @@
 <meta property="og:image" content="http://pic.caigoubao.cc/606618/medish6.jpg">
 <meta property="og:image" content="http://pic.caigoubao.cc/606618/dead.png">
 <meta property="og:image" content="http://pic.caigoubao.cc/606618/deadlock.png">
-<meta property="og:updated_time" content="2018-09-10T14:05:29.180Z">
+<meta property="og:updated_time" content="2018-09-17T13:05:24.164Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Vayi">
+<meta name="twitter:title" content="MYSQL锁以及死锁的产生跟解决">
 <meta name="twitter:description" content="InnoDB MySQL InnoDB存储引擎，实现的是基于多版本的并发控制协议——MVCC (Multi-Version Concurrency Control)  在MVCC并发控制中，读操作可以分成两类：快照读 (snapshot read)与当前读 (current read)。快照读，读取的是记录的可见版本 (有可能是历史版本)，不用加锁。当前读，读取的是记录的最新版本，并且，当前读返回">
 <meta name="twitter:image" content="http://pic.caigoubao.cc/606618/gap.png">
 
@@ -155,13 +156,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/09/10/MYSQL_LOCK/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/08/17/MYSQL_LOCK/"/>
 
 
 
 
 
-  <title> | Vayi</title>
+  <title>MYSQL锁以及死锁的产生跟解决 | Vayi</title>
   
 
 
@@ -318,7 +319,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/10/MYSQL_LOCK/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/17/MYSQL_LOCK/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="chen">
@@ -335,7 +336,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">MYSQL锁以及死锁的产生跟解决</h1>
         
 
         <div class="post-meta">
@@ -347,8 +348,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-10T22:00:52+08:00">
-                2018-09-10
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-17T23:22:59+08:00">
+                2018-08-17
               </time>
             
 
@@ -357,6 +358,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MYSQL/" itemprop="url" rel="index">
+                    <span itemprop="name">MYSQL</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -764,6 +787,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/MYSQL/" rel="tag"><i class="fa fa-tag"></i> MYSQL</a>
+          
+        </div>
+      
 
       
       
@@ -895,7 +924,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -906,7 +935,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-count">8</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
