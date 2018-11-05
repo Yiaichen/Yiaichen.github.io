@@ -114,7 +114,7 @@
 <meta property="og:site_name" content="Vayi">
 <meta property="og:description" content="概念 单例模式，是一种常用的软件设计模式。在它的核心结构中只包含一个被称为单例的特殊类。通过单例模式可以保证系统中，应用该模式的类一个类只有一个实例。即一个类只有一个对象实例。  三种单例模式 饿汉式  系统加载时初始化实例，即使不加载也会初始化，占用内存较大，线程安全   懒汉式  系统加载不初始化，需要加载实例时再初始化实例，线程不安全，加了双重检查之后线程安全   枚举  JDK1.5加入的">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-11-05T13:38:34.405Z">
+<meta property="og:updated_time" content="2018-11-05T13:41:00.313Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一个栗子搞懂单例模式">
 <meta name="twitter:description" content="概念 单例模式，是一种常用的软件设计模式。在它的核心结构中只包含一个被称为单例的特殊类。通过单例模式可以保证系统中，应用该模式的类一个类只有一个实例。即一个类只有一个对象实例。  三种单例模式 饿汉式  系统加载时初始化实例，即使不加载也会初始化，占用内存较大，线程安全   懒汉式  系统加载不初始化，需要加载实例时再初始化实例，线程不安全，加了双重检查之后线程安全   枚举  JDK1.5加入的">
@@ -443,8 +443,7 @@
 <h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><blockquote>
 <p>为什么要考虑线程安全？</p>
 </blockquote>
-<p>###举个栗子（懒汉式非双重检查）</p>
-<table>
+<h3 id="举个栗子（懒汉式非双重检查）"><a href="#举个栗子（懒汉式非双重检查）" class="headerlink" title="举个栗子（懒汉式非双重检查）"></a>举个栗子（懒汉式非双重检查）</h3><table>
 <thead>
 <tr>
 <th style="text-align:center">步骤</th>
@@ -725,7 +724,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#三种单例模式"><span class="nav-number">1.1.</span> <span class="nav-text">三种单例模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#举个栗子"><span class="nav-number">2.</span> <span class="nav-text">举个栗子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#懒汉式"><span class="nav-number">2.1.</span> <span class="nav-text">懒汉式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#懒汉式-1"><span class="nav-number">2.2.</span> <span class="nav-text">懒汉式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">3.</span> <span class="nav-text">问题</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概念"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#三种单例模式"><span class="nav-number">1.1.</span> <span class="nav-text">三种单例模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#举个栗子"><span class="nav-number">2.</span> <span class="nav-text">举个栗子</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#懒汉式"><span class="nav-number">2.1.</span> <span class="nav-text">懒汉式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#懒汉式-1"><span class="nav-number">2.2.</span> <span class="nav-text">懒汉式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">3.</span> <span class="nav-text">问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#举个栗子（懒汉式非双重检查）"><span class="nav-number">3.1.</span> <span class="nav-text">举个栗子（懒汉式非双重检查）</span></a></li></ol></li></ol></div>
             
 
           </div>
