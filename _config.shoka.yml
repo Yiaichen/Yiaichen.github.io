@@ -16,8 +16,11 @@ menu:
     archives: /archives/ || list-alt
     categories: /categories/ || th
     tags: /tags/ || tags
-  friends: /friends/ || heart
-  links: /links/ || magic
+  website:
+    default: / || magic
+    friends: /friends/ || heart
+    webstack: /webstack/ || star
+  links: https://travellings.link || paper-plane
 
 # Social Links
 # Usage: `Key: permalink || icon || color`
@@ -71,6 +74,8 @@ audio:
    - title: love music
      list:
         - https://music.163.com/#/playlist?id=413415912
+   - title: qing music
+     list:
         - https://music.163.com/#/playlist?id=451618511
    - title: sad music
      list:

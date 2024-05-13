@@ -38,7 +38,7 @@ deploy:
 
 # Site
 title: Vayi
-subtitle: vayi
+subtitle:
 description: vayi's blog~
 keywords: vayi,blog # edit for Theme.shoka
 author: vayi
@@ -86,9 +86,6 @@ prismjs:
 # Category & Tag
 default_category: uncategorized
 category_map: # edit for Theme.shoka
-  计算机科学: computer-science
-  Java: java
-  二进制杂谈: note
   Theme Shoka Documentation: theme-shoka-doc
 tag_map:
 
