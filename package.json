@@ -2,21 +2,32 @@
   "name": "hexo-site",
   "version": "0.0.0",
   "private": true,
+  "scripts": {
+    "build": "hexo generate",
+    "clean": "hexo clean",
+    "deploy": "hexo deploy",
+    "server": "hexo server"
+  },
   "hexo": {
-    "version": "3.3.8"
+    "version": "5.4.2"
   },
   "dependencies": {
-    "hexo": "^3.2.0",
-    "hexo-deployer-git": "^0.3.1",
+    "hexo": "^5.0.0",
+    "hexo-algoliasearch": "^0.4.2",
+    "hexo-autoprefixer": "^2.0.0",
+    "hexo-deployer-git": "^2.1.0",
+    "hexo-feed": "^1.0.2",
     "hexo-generator-archive": "^0.1.4",
-    "hexo-generator-category": "^0.1.3",
+    "hexo-generator-category": "^1.0.0",
     "hexo-generator-index": "^0.2.0",
-    "hexo-generator-tag": "^0.2.0",
+    "hexo-generator-tag": "^1.0.0",
     "hexo-helper-live2d": "^3.0.2",
-    "hexo-renderer-ejs": "^0.3.0",
-    "hexo-renderer-marked": "^0.3.0",
-    "hexo-renderer-stylus": "^0.3.1",
-    "hexo-server": "^0.2.0",
+    "hexo-renderer-ejs": "^1.0.0",
+    "hexo-renderer-multi-markdown-it": "^0.1.5",
+    "hexo-renderer-stylus": "^2.0.0",
+    "hexo-server": "^2.0.0",
+    "hexo-symbols-count-time": "^0.7.1",
+    "hexo-util": "^2.4.0",
     "live2d-widget-model-chitose": "^1.0.5",
     "live2d-widget-model-shizuku": "^1.0.5"
   }
