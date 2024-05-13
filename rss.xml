@@ -2,7 +2,7 @@
 <rss version="2.0">
     <channel>
         <title>Vayi</title>
-        <subtitle>vayi</subtitle>
+        <subtitle></subtitle>
         <icon>http://vayi.site/images/favicon.ico</icon>
         <link>http://vayi.site</link>
         <author>
@@ -1066,7 +1066,7 @@
             <guid isPermalink="true">http://vayi.site/restructure/</guid>
             <title>重构 (附源码)</title>
             <link>http://vayi.site/restructure/</link>
-            <category term="Java" scheme="http://vayi.site/categories/java/" />
+            <category term="Java" scheme="http://vayi.site/categories/Java/" />
             <category term="Java" scheme="http://vayi.site/tags/Java/" />
             <category term="重构" scheme="http://vayi.site/tags/%E9%87%8D%E6%9E%84/" />
             <pubDate>Thu, 02 Aug 2018 16:46:00 +0800</pubDate>
@@ -1101,7 +1101,7 @@
             <guid isPermalink="true">http://vayi.site/semaphore/</guid>
             <title>Semaphore深入浅出</title>
             <link>http://vayi.site/semaphore/</link>
-            <category term="Java" scheme="http://vayi.site/categories/java/" />
+            <category term="Java" scheme="http://vayi.site/categories/Java/" />
             <category term="Java" scheme="http://vayi.site/tags/Java/" />
             <category term="多线程" scheme="http://vayi.site/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/" />
             <pubDate>Tue, 15 May 2018 23:22:59 +0800</pubDate>
@@ -1127,7 +1127,7 @@
             <guid isPermalink="true">http://vayi.site/dom4j/</guid>
             <title>Java读取xml——dom4j篇</title>
             <link>http://vayi.site/dom4j/</link>
-            <category term="Java" scheme="http://vayi.site/categories/java/" />
+            <category term="Java" scheme="http://vayi.site/categories/Java/" />
             <category term="Java" scheme="http://vayi.site/tags/Java/" />
             <category term="xml" scheme="http://vayi.site/tags/xml/" />
             <pubDate>Sun, 27 Aug 2017 10:33:58 +0800</pubDate>

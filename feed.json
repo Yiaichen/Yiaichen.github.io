@@ -1,7 +1,7 @@
 {
     "version": "https://jsonfeed.org/version/1",
     "title": "Vayi",
-    "subtitle": "vayi",
+    "subtitle": null,
     "icon": "http://vayi.site/images/favicon.ico",
     "description": "vayi's blog~",
     "home_page_url": "http://vayi.site",
