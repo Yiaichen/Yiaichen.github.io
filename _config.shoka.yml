@@ -16,6 +16,9 @@ menu:
     archives: /archives/ || list-alt
     categories: /categories/ || th
     tags: /tags/ || tags
+  about:
+    default: / || user
+    zishe: /zishe/ || cloud
   website:
     default: / || magic
     friends: /friends/ || heart
