@@ -29,6 +29,8 @@
     "hexo-symbols-count-time": "^0.7.1",
     "hexo-util": "^2.4.0",
     "live2d-widget-model-chitose": "^1.0.5",
-    "live2d-widget-model-shizuku": "^1.0.5"
+    "live2d-widget-model-shizuku": "^1.0.5",
+    "hexo-algolia": "^1.3.2",
+    "hexo-theme-landscape": "^0.0.3"
   }
 }
